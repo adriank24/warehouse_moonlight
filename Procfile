@@ -1,1 +1,1 @@
-worker: python Coba Sinkronisasi.py
+worker: python Coba_Sinkronisasi.py
