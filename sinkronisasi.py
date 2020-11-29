@@ -54,6 +54,8 @@ def sinkron_ais():
             data["destination"]="null"
             data["eta"]="2016-04-18T12:21:00.000+00:00"
             data["data_source"]="Kijang2"
+            data["is_assignment"]=False
+            data['is_mission']=False
             
             log_entry = { "date": ts, "cur_vessel": vessel_num}
             log_col.insert_one(log_entry)
