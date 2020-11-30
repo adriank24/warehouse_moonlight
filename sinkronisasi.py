@@ -106,7 +106,7 @@ def agregasi_category1(data_ais):
 # In[4]:
 
 
-schedule.every(5).minutes.do(sinkron_ais)             
+schedule.every(1).minutes.do(sinkron_ais)             
 while 1 :
     schedule.run_pending()
     time.sleep(1)
