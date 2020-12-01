@@ -22,7 +22,7 @@ bedb = client_be["tni_al"]
 
 # Get new data from vessel and insert to AIS
 
-# In[2]:
+# In[ ]:
 
 
 def sinkron_ais():
@@ -81,7 +81,7 @@ def sinkron_ais():
 
 # Proto
 
-# In[3]:
+# In[ ]:
 
 
 def agregasi_category1(data_ais):
@@ -103,10 +103,78 @@ def agregasi_category1(data_ais):
 
 # 
 
-# In[4]:
+# Agregasi status assignment
+
+# In[2]:
 
 
-schedule.every(1).minutes.do(sinkron_ais)             
+def agregasi_tugas():
+    #Collection yang dipake
+    tugas=bedb["assignments"]
+#     misi=bedb["specialmissions"]
+    vessel=bedb["vessels"]
+    ais=dwdb["ais"]
+    
+    data_tugas=tugas.find()
+    for x in data_tugas:
+        if x["draft"]== True:
+            continue
+        else:
+            if "vessel" in x:
+                data_vessel=vessel.find_one({"_id":x["vessel"]})
+            else:
+                continue
+            data_vessel=vessel.find_one({"_id":x["vessel"]})
+            if x["completed"]== True:
+                myquery = { "mmsi": data_vessel["mmsi"] }
+                newvalues = { "$set": { "is_assignment": False } }
+                ais.update_one(myquery,newvalues)
+            else:
+                myquery = { "mmsi": data_vessel["mmsi"] }
+                newvalues = { "$set": { "is_assignment": True } }
+                ais.update_one(myquery,newvalues)
+                
+    print("assignment sinkron")          
+
+
+# 
+
+# Agregasi status mission
+
+# In[3]:
+
+
+def agregasi_mission():
+    #Collection yang dipake
+    misi=bedb["specialmissions"]
+    vessel=bedb["vessels"]
+    ais=dwdb["ais"]
+    
+    data_misi=misi.find()
+    for x in data_misi:
+        if "vessel" in x:
+            data_vessel=vessel.find_one({"_id":x["vessel"]})
+        else:
+            continue
+            
+        if x["completed"]== True:
+            myquery = { "mmsi": data_vessel["mmsi"] }
+            newvalues = { "$set": { "is_assignment": False, "is_mission": False } }
+            ais.update_one(myquery,newvalues)
+        else:
+            myquery = { "mmsi": data_vessel["mmsi"] }
+            newvalues = { "$set": { "is_assignment": True, "is_assignment": True } }
+            ais.update_one(myquery,newvalues)
+                
+    print("mission sinkron")      
+
+
+# In[6]:
+
+
+schedule.every(1).minutes.do(sinkron_ais)
+schedule.every(3).minutes.do(agregasi_tugas) 
+schedule.every(3).minutes.do(agregasi_mission)
 while 1 :
     schedule.run_pending()
     time.sleep(1)
