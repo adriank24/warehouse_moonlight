@@ -1,5 +1,10 @@
 Step to do :
 
+**INSTAL PYTHON**
+
+1. Cek python version
+
+2. 
 install python, untuk aplikasi ini dikembangkan di python-3.7.2
 
 lalu install dependency yang dipakai dari requirement.txt
