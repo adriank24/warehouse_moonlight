@@ -131,7 +131,7 @@ def agregasi_tugas():
                 ais.update_one(myquery,newvalues)
             else:
                 myquery = { "mmsi": data_vessel["mmsi"] }
-                newvalues = { "$set": { "is_assignment": True } }
+                newvalues = { "$set": { "is_assignment": True, "lat":x["lat"], "lon":x["lon"] } }
                 ais.update_one(myquery,newvalues)
                 
     print("assignment sinkron")          
@@ -141,7 +141,7 @@ def agregasi_tugas():
 
 # Agregasi status mission
 
-# In[3]:
+# In[4]:
 
 
 def agregasi_mission():
@@ -163,16 +163,16 @@ def agregasi_mission():
             ais.update_one(myquery,newvalues)
         else:
             myquery = { "mmsi": data_vessel["mmsi"] }
-            newvalues = { "$set": { "is_assignment": True, "is_assignment": True } }
+            newvalues = { "$set": { "is_assignment": True, "is_assignment": True, "lat":x["lat"], "lon":x["lon"] } }
             ais.update_one(myquery,newvalues)
                 
     print("mission sinkron")      
 
 
-# In[6]:
+# In[5]:
 
 
-schedule.every(1).minutes.do(sinkron_ais)
+# schedule.every(1).minutes.do(sinkron_ais)
 schedule.every(3).minutes.do(agregasi_tugas) 
 schedule.every(3).minutes.do(agregasi_mission)
 while 1 :
