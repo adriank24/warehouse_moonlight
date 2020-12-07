@@ -172,7 +172,7 @@ def agregasi_mission():
 # In[5]:
 
 
-# schedule.every(1).minutes.do(sinkron_ais)
+schedule.every(1).minutes.do(sinkron_ais)
 schedule.every(3).minutes.do(agregasi_tugas) 
 schedule.every(3).minutes.do(agregasi_mission)
 while 1 :
