@@ -3,13 +3,16 @@
 
 # Dependency Library
 
-# In[1]:
+# In[2]:
 
 
 import pymongo
 import datetime
 import schedule
 import time
+
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 warehouse = 'mongodb+srv://admin:WeaYWh2g5ngfNK9@cluster0.khbod.mongodb.net/<moonlight>?retryWrites=true&w=majority'
 backend='mongodb+srv://data_warehouse:xLbTHZqmnHjxiXsS@clusterbelajar.mp6dn.mongodb.net/tni_al?retryWrites=true&w=majority'
@@ -22,7 +25,7 @@ bedb = client_be["tni_al"]
 
 # Get new data from vessel and insert to AIS
 
-# In[ ]:
+# In[3]:
 
 
 def sinkron_ais():
@@ -81,7 +84,7 @@ def sinkron_ais():
 
 # Proto
 
-# In[ ]:
+# In[4]:
 
 
 def agregasi_category1(data_ais):
@@ -105,7 +108,7 @@ def agregasi_category1(data_ais):
 
 # Agregasi status assignment
 
-# In[2]:
+# In[5]:
 
 
 def agregasi_tugas():
@@ -130,9 +133,12 @@ def agregasi_tugas():
                 newvalues = { "$set": { "is_assignment": False } }
                 ais.update_one(myquery,newvalues)
             else:
-                myquery = { "mmsi": data_vessel["mmsi"] }
-                newvalues = { "$set": { "is_assignment": True, "lat":x["lat"], "lon":x["lon"] } }
-                ais.update_one(myquery,newvalues)
+                if ais["is_assignment"] == False:
+                    myquery = { "mmsi": data_vessel["mmsi"] }
+                    newvalues = { "$set": { "is_assignment": True, "lat":x["lat"], "lon":x["lon"] } }
+                    ais.update_one(myquery,newvalues)
+                    
+                
                 
     print("assignment sinkron")          
 
@@ -141,7 +147,7 @@ def agregasi_tugas():
 
 # Agregasi status mission
 
-# In[4]:
+# In[6]:
 
 
 def agregasi_mission():
@@ -162,14 +168,57 @@ def agregasi_mission():
             newvalues = { "$set": { "is_assignment": False, "is_mission": False } }
             ais.update_one(myquery,newvalues)
         else:
-            myquery = { "mmsi": data_vessel["mmsi"] }
-            newvalues = { "$set": { "is_assignment": True, "is_assignment": True, "lat":x["lat"], "lon":x["lon"] } }
-            ais.update_one(myquery,newvalues)
+            if ais["is_mission"] == False:
+                myquery = { "mmsi": data_vessel["mmsi"] }
+                newvalues = { "$set": { "is_mission": True, "is_assignment": True, "lat":x["lat"], "lon":x["lon"] } }
+                ais.update_one(myquery,newvalues)
                 
     print("mission sinkron")      
 
 
-# In[5]:
+# Cek posisi kapal
+
+# In[7]:
+
+
+def cek_posisi(data_ais):
+    ts=datetime.datetime.now()
+    #Collection yang dipake
+    geofences = bedb["geofences"]
+    temp = dwdb["temp_notif"]
+    
+    data_geo=geofences.find()
+    data_temp=geofences.find_one()
+    
+    for x in data_geo:
+        long_lat_list = []
+        for y in x["coordinates"]:
+            long_lat_list.append(y)
+        
+#         print(long_lat_list)
+        polygon = Polygon(long_lat_list) # create polygon
+        point = Point(data_ais["lon"],data_ais["lat"]) # create point
+#         print(point)
+#         print(point.within(polygon)) # check if a point is in the polygon 
+
+        if(point.within(polygon)):
+            data_ais["geofences"]=x["_id"]
+            try:
+                temp.insert_one(data_ais)
+            except pymongo.errors.DuplicateKeyError:
+                # skip document because it already exists in new collection
+                print("warning")
+                myquery = { "mmsi": data_ais["mmsi"] }
+                newvalues = { "$set": { "lat": data_ais["lat"], "lon":data_ais["lon"] } }
+                ais.update_one(myquery,newvalues)
+        else:    
+            print("ga bahaya")
+    
+
+
+# 
+
+# In[8]:
 
 
 schedule.every(1).minutes.do(sinkron_ais)
